@@ -26,7 +26,7 @@ dependencies {
     api(libs.sqldelight.android.paging)
 
     // SY -->
-    implementation(libs.injekt.core)
+    implementation(libs.injekt)
     // SY <--
 
     testImplementation(libs.bundles.test)

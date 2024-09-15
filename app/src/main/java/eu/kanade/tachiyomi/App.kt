@@ -21,6 +21,7 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.allowRgb565
 import coil3.request.crossfade
 import coil3.util.DebugLogger
+import dev.mihon.injekt.patchInjekt
 import com.elvishew.xlog.LogConfiguration
 import com.elvishew.xlog.LogLevel
 import com.elvishew.xlog.XLog
@@ -98,6 +99,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
     @SuppressLint("LaunchActivityFromNotification")
     override fun onCreate() {
         super<Application>.onCreate()
+        patchInjekt()
 
         // SY -->
         if (!isDevFlavor) {
