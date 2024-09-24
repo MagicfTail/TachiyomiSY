@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.manga
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -34,6 +35,7 @@ import eu.kanade.presentation.manga.MangaScreen
 import eu.kanade.presentation.manga.components.DeleteChaptersDialog
 import eu.kanade.presentation.manga.components.MangaCoverDialog
 import eu.kanade.presentation.manga.components.ScanlatorFilterDialog
+import eu.kanade.presentation.manga.components.ScanlatorSortDialog
 import eu.kanade.presentation.manga.components.SetIntervalDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
@@ -49,6 +51,7 @@ import eu.kanade.tachiyomi.ui.browse.source.feed.SourceFeedScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.manga.dedupe.DedupeScanlatorsSettingsDialog
 import eu.kanade.tachiyomi.ui.manga.merged.EditMergedSettingsDialog
 import eu.kanade.tachiyomi.ui.manga.track.TrackInfoDialogHomeScreen
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
@@ -233,6 +236,7 @@ class MangaScreen(
         )
 
         var showScanlatorsDialog by remember { mutableStateOf(false) }
+        var showScanlatorsSortDialog by remember { mutableStateOf(false) }
 
         val onDismissRequest = { screenModel.dismissDialog() }
         when (val dialog = successState.dialog) {
@@ -281,6 +285,8 @@ class MangaScreen(
                 onResetToDefault = screenModel::resetToDefaultSettings,
                 scanlatorFilterActive = successState.scanlatorFilterActive,
                 onScanlatorFilterClicked = { showScanlatorsDialog = true },
+                sortScanlatorFilterActive = false,
+                onSortScanlatorClicked = { showScanlatorsSortDialog = true},
             )
             MangaScreenModel.Dialog.TrackSheet -> {
                 NavigatorAdaptiveSheet(
@@ -353,6 +359,15 @@ class MangaScreen(
                 excludedScanlators = successState.excludedScanlators,
                 onDismissRequest = { showScanlatorsDialog = false },
                 onConfirm = screenModel::setExcludedScanlators,
+            )
+        }
+
+        if (showScanlatorsSortDialog) {
+            DedupeScanlatorsSettingsDialog(
+                onDismissRequest = {showScanlatorsSortDialog = false},
+                sortedScanlators = successState.sortedScanlators,
+                scanlators = successState.availableScanlators,
+                onPositiveClick = {a -> Log.i("", successState.availableScanlators.toString())}
             )
         }
     }

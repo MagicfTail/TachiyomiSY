@@ -50,6 +50,8 @@ fun ChapterSettingsDialog(
     onBookmarkedFilterChanged: (TriState) -> Unit,
     scanlatorFilterActive: Boolean,
     onScanlatorFilterClicked: (() -> Unit),
+    sortScanlatorFilterActive: Boolean,
+    onSortScanlatorClicked: (() -> Unit),
     onSortModeChanged: (Long) -> Unit,
     onDisplayModeChanged: (Long) -> Unit,
     onSetAsDefault: (applyToExistingManga: Boolean) -> Unit,
@@ -104,6 +106,8 @@ fun ChapterSettingsDialog(
                         onBookmarkedFilterChanged = onBookmarkedFilterChanged,
                         scanlatorFilterActive = scanlatorFilterActive,
                         onScanlatorFilterClicked = onScanlatorFilterClicked,
+                        sortScanlatorFilterActive = sortScanlatorFilterActive,
+                        onSortScanlatorClicked = onSortScanlatorClicked
                     )
                 }
                 1 -> {
@@ -134,6 +138,8 @@ private fun ColumnScope.FilterPage(
     onBookmarkedFilterChanged: (TriState) -> Unit,
     scanlatorFilterActive: Boolean,
     onScanlatorFilterClicked: (() -> Unit),
+    sortScanlatorFilterActive: Boolean,
+    onSortScanlatorClicked: (() -> Unit)
 ) {
     TriStateItem(
         label = stringResource(MR.strings.label_downloaded),
@@ -151,13 +157,20 @@ private fun ColumnScope.FilterPage(
         onClick = onBookmarkedFilterChanged,
     )
     ScanlatorFilterItem(
+        label = stringResource(MR.strings.scanlator),
         active = scanlatorFilterActive,
         onClick = onScanlatorFilterClicked,
+    )
+    ScanlatorFilterItem(
+        label = "Dedupe Scanlators",
+        active = sortScanlatorFilterActive,
+        onClick = onSortScanlatorClicked,
     )
 }
 
 @Composable
 fun ScanlatorFilterItem(
+    label: String,
     active: Boolean,
     onClick: () -> Unit,
 ) {
@@ -179,7 +192,7 @@ fun ScanlatorFilterItem(
             },
         )
         Text(
-            text = stringResource(MR.strings.scanlator),
+            text = label,
             style = MaterialTheme.typography.bodyMedium,
         )
     }

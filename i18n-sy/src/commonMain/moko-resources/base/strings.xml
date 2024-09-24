@@ -683,6 +683,10 @@
     <!-- Scanlator filters -->
     <string name="select_scanlators">Scanlator groups to show</string>
 
+    <!-- Scanlator deduplication -->
+    <string name="add_sorted_scanlator_description">Add the scanlator to prioritized scanlators</string>
+    <string name="remove_sorted_scanlator_description">Remove the scanlator from prioritized scanlators</string>
+
     <!-- Similar -->
     <string name="similar">Similar to %1$s</string>
 

@@ -5,6 +5,7 @@ import eu.kanade.domain.manga.interactor.CreateSortTag
 import eu.kanade.domain.manga.interactor.DeleteSortTag
 import eu.kanade.domain.manga.interactor.GetPagePreviews
 import eu.kanade.domain.manga.interactor.GetSortTag
+import eu.kanade.domain.manga.interactor.GetSortedScanlators
 import eu.kanade.domain.manga.interactor.ReorderSortTag
 import eu.kanade.domain.source.interactor.CreateSourceCategory
 import eu.kanade.domain.source.interactor.DeleteSourceCategory
@@ -155,5 +156,6 @@ class SYDomainModule : InjektModule {
         addSingletonFactory<CustomMangaRepository> { CustomMangaRepositoryImpl(get<Application>()) }
         addFactory { GetCustomMangaInfo(get()) }
         addFactory { SetCustomMangaInfo(get()) }
+        addFactory { GetSortedScanlators(get()) }
     }
 }

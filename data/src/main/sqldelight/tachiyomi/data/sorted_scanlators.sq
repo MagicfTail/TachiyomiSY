@@ -1,0 +1,25 @@
+CREATE TABLE sorted_scanlators (
+    manga_id INTEGER NOT NULL,
+    scanlator TEXT NOT NULL,
+    rank INTEGER NOT NULL,
+    FOREIGN KEY(manga_id) REFERENCES mangas (_id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX sorted_scanlators_manga_id_index ON sorted_scanlators(manga_id);
+
+upsert:
+INSERT INTO sorted_scanlators(manga_id, scanlator, rank)
+VALUES (:mangaId, :scanlator, :rank)
+ON CONFLICT (manga_id, scanlator)
+DO UPDATE SET rank = :rank;
+
+remove:
+DELETE FROM sorted_scanlators
+WHERE manga_id = :mangaID
+AND scanlator = :scanlator;
+
+getSortedScanlatorsByMangaId:
+SELECT scanlator, rank
+FROM sorted_scanlators
+WHERE manga_id = :mangaId;

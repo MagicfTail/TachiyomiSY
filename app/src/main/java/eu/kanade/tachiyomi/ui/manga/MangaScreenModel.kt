@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.util.fastAny
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.core.util.insertSeparators
@@ -16,6 +17,7 @@ import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.domain.chapter.interactor.SyncChaptersWithSource
 import eu.kanade.domain.manga.interactor.GetExcludedScanlators
 import eu.kanade.domain.manga.interactor.GetPagePreviews
+import eu.kanade.domain.manga.interactor.GetSortedScanlators
 import eu.kanade.domain.manga.interactor.SetExcludedScanlators
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.PagePreview
@@ -88,6 +90,7 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.GetSortedScanlatorsByMangaId
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.SetMangaCategories
 import tachiyomi.domain.category.model.Category
@@ -119,6 +122,7 @@ import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaUpdate
 import tachiyomi.domain.manga.model.MergeMangaSettingsUpdate
 import tachiyomi.domain.manga.model.MergedMangaReference
+import tachiyomi.domain.manga.model.SortedScanlator
 import tachiyomi.domain.manga.model.applyFilter
 import tachiyomi.domain.manga.repository.MangaRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -162,6 +166,7 @@ class MangaScreenModel(
     private val getPagePreviews: GetPagePreviews = Injekt.get(),
     private val insertTrack: InsertTrack = Injekt.get(),
     private val setCustomMangaInfo: SetCustomMangaInfo = Injekt.get(),
+    private val getSortedScanlators: GetSortedScanlators = Injekt.get(),
     // SY <--
     private val getDuplicateLibraryManga: GetDuplicateLibraryManga = Injekt.get(),
     private val getAvailableScanlators: GetAvailableScanlators = Injekt.get(),
@@ -428,6 +433,7 @@ class MangaScreenModel(
                     alwaysShowReadingProgress =
                     readerPreferences.preserveReadingPosition().get() && manga.isEhBasedManga(),
                     previewsRowCount = uiPreferences.previewsRowCount().get(),
+                    sortedScanlators = getSortedScanlators.await(mangaId),
                     // SY <--
                 )
             }
@@ -1681,6 +1687,7 @@ class MangaScreenModel(
             val pagePreviewsState: PagePreviewState,
             val alwaysShowReadingProgress: Boolean,
             val previewsRowCount: Int,
+            val sortedScanlators: Set<SortedScanlator>
             // SY <--
         ) : State {
             val processedChapters by lazy {
@@ -1737,7 +1744,20 @@ class MangaScreenModel(
                     .filter { (chapter) -> applyFilter(unreadFilter) { !chapter.read } }
                     .filter { (chapter) -> applyFilter(bookmarkedFilter) { chapter.bookmark } }
                     .filter { applyFilter(downloadedFilter) { it.isDownloaded || isLocalManga } }
-                    .sortedWith { (chapter1), (chapter2) -> getChapterSort(manga).invoke(chapter1, chapter2) }
+                    .filterChaptersByScanlatorRank(manga)
+                    .sortChapters(manga)
+            }
+
+            private fun Sequence<ChapterList.Item>.sortChapters(manga: Manga): Sequence<ChapterList.Item> {
+                return sortedWith { (chapter1), (chapter2) -> getChapterSort(manga).invoke(chapter1, chapter2) }
+            }
+
+            private fun Sequence<ChapterList.Item>.filterChaptersByScanlatorRank(manga: Manga): Sequence<ChapterList.Item> {
+                if (manga.sortScanlatorsFilter) {
+                    return distinctBy { it.chapter.chapterNumber }
+                }
+
+                return this
             }
         }
     }

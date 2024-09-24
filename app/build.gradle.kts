@@ -158,6 +158,7 @@ dependencies {
     implementation(compose.material.icons)
     implementation(compose.animation)
     implementation(compose.animation.graphics)
+    implementation(libs.cardview.v7)
     debugImplementation(compose.ui.tooling)
     implementation(compose.ui.tooling.preview)
     implementation(compose.ui.util)

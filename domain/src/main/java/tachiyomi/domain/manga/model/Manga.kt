@@ -63,6 +63,9 @@ data class Manga(
 
     val status: Long
         get() = customMangaInfo?.status ?: ogStatus
+
+    val sortScanlatorsFilter: Boolean
+        get() = true
     // SY <--
 
     val expectedNextUpdate: Instant?
