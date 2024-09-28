@@ -15,11 +15,6 @@ class SortedDedupeScanlatorHolder(view: View, val adapter: SortedDedupeScanlator
         }
     }
 
-    override fun onItemReleased(position: Int) {
-        super.onItemReleased(position)
-        adapter.sortedDedupeScanlatorsItemListener.onItemReleased(position)
-    }
-
     fun bind(scanlator: String) {
         binding.title.text = scanlator
     }

@@ -64,8 +64,8 @@ data class Manga(
     val status: Long
         get() = customMangaInfo?.status ?: ogStatus
 
-    val sortScanlatorsFilter: Boolean
-        get() = true
+    val dedupeScanlatorsFilter: Boolean
+        get() = chapterFlags and DEDUPE_SCANLATORS_MASK == DEDUPE_SCANLATORS_ENABLED
     // SY <--
 
     val expectedNextUpdate: Instant?
@@ -135,6 +135,10 @@ data class Manga(
         const val CHAPTER_DISPLAY_NAME = 0x00000000L
         const val CHAPTER_DISPLAY_NUMBER = 0x00100000L
         const val CHAPTER_DISPLAY_MASK = 0x00100000L
+
+        const val DEDUPE_SCANLATORS_ENABLED = 0x1000000000000L
+        const val DEDUPE_SCANLATORS_DISABLED = 0x0000000000000L
+        const val DEDUPE_SCANLATORS_MASK = 0x1000000000000L
 
         fun create() = Manga(
             id = -1L,

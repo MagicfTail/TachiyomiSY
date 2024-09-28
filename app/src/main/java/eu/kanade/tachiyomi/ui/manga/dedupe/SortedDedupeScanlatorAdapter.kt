@@ -9,6 +9,5 @@ class SortedDedupeScanlatorAdapter(listener: DedupeScanlatorsSettingsState) :
 
     interface SortedDedupeScanlatorsItemListener {
         fun onRemoveClicked(position: Int)
-        fun onItemReleased(position: Int)
     }
 }

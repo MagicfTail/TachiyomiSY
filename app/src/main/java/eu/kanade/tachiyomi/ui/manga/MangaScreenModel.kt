@@ -8,7 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.util.fastAny
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.core.util.insertSeparators
@@ -19,6 +18,7 @@ import eu.kanade.domain.manga.interactor.GetExcludedScanlators
 import eu.kanade.domain.manga.interactor.GetPagePreviews
 import eu.kanade.domain.manga.interactor.GetSortedScanlators
 import eu.kanade.domain.manga.interactor.SetExcludedScanlators
+import eu.kanade.domain.manga.interactor.SetSortedScanlators
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.PagePreview
 import eu.kanade.domain.manga.model.chaptersFiltered
@@ -90,7 +90,6 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.GetSortedScanlatorsByMangaId
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.SetMangaCategories
 import tachiyomi.domain.category.model.Category
@@ -136,6 +135,7 @@ import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
+import kotlin.Long.Companion.MAX_VALUE
 import kotlin.math.floor
 
 class MangaScreenModel(
@@ -167,6 +167,7 @@ class MangaScreenModel(
     private val insertTrack: InsertTrack = Injekt.get(),
     private val setCustomMangaInfo: SetCustomMangaInfo = Injekt.get(),
     private val getSortedScanlators: GetSortedScanlators = Injekt.get(),
+    private val setSortedScanlators: SetSortedScanlators = Injekt.get(),
     // SY <--
     private val getDuplicateLibraryManga: GetDuplicateLibraryManga = Injekt.get(),
     private val getAvailableScanlators: GetAvailableScanlators = Injekt.get(),
@@ -728,6 +729,15 @@ class MangaScreenModel(
             deleteMergeById.await(reference.id)
         }
     }
+
+    fun setDeduplicateScanlators(enabled: Boolean) {
+        val manga = successState?.manga ?: return
+
+        screenModelScope.launchNonCancellable {
+            setMangaChapterFlags.awaitSetDedupeScanlators(manga, enabled)
+        }
+    }
+
     // SY <--
 
     fun toggleFavorite() {
@@ -1659,6 +1669,13 @@ class MangaScreenModel(
             }
         }
     }
+
+    fun setSortedScanlators(sortedScanlators: Set<SortedScanlator>) {
+        screenModelScope.launchIO {
+            setSortedScanlators.await(mangaId, sortedScanlators)
+        }
+    }
+
     // SY <--
 
     sealed interface State {
@@ -1691,7 +1708,7 @@ class MangaScreenModel(
             // SY <--
         ) : State {
             val processedChapters by lazy {
-                chapters.applyFilters(manga).toList()
+                chapters.applyFilters(manga).sortChapters(manga).filterChaptersByScanlatorRank(manga).toList()
             }
 
             val isAnySelected by lazy {
@@ -1728,8 +1745,13 @@ class MangaScreenModel(
             val scanlatorFilterActive: Boolean
                 get() = excludedScanlators.intersect(availableScanlators).isNotEmpty()
 
+            // SY -->
+            val scanlatorDeduplicationActive: Boolean
+                get() = manga.dedupeScanlatorsFilter
+            // SY <--
+
             val filterActive: Boolean
-                get() = scanlatorFilterActive || manga.chaptersFiltered()
+                get() = scanlatorFilterActive || manga.chaptersFiltered() || scanlatorDeduplicationActive
 
             /**
              * Applies the view filters to the list of chapters obtained from the database.
@@ -1744,8 +1766,6 @@ class MangaScreenModel(
                     .filter { (chapter) -> applyFilter(unreadFilter) { !chapter.read } }
                     .filter { (chapter) -> applyFilter(bookmarkedFilter) { chapter.bookmark } }
                     .filter { applyFilter(downloadedFilter) { it.isDownloaded || isLocalManga } }
-                    .filterChaptersByScanlatorRank(manga)
-                    .sortChapters(manga)
             }
 
             private fun Sequence<ChapterList.Item>.sortChapters(manga: Manga): Sequence<ChapterList.Item> {
@@ -1753,8 +1773,17 @@ class MangaScreenModel(
             }
 
             private fun Sequence<ChapterList.Item>.filterChaptersByScanlatorRank(manga: Manga): Sequence<ChapterList.Item> {
-                if (manga.sortScanlatorsFilter) {
-                    return distinctBy { it.chapter.chapterNumber }
+                if (manga.dedupeScanlatorsFilter) {
+                    val sortedScanlatorsMap = sortedScanlators.associate { it.scanlator to it.rank }
+                    val groups = groupBy { it.chapter.chapterNumber }
+                        .map { (_, l) -> l
+                            .minWithOrNull(compareBy<ChapterList.Item> {
+                                sortedScanlatorsMap.getOrDefault(it.chapter.scanlator?: "", MAX_VALUE)
+                            }.thenBy {
+                                it.chapter.scanlator
+                            })
+                        }.asSequence()
+                    return groups.mapNotNull { it }
                 }
 
                 return this

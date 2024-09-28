@@ -6,6 +6,7 @@ import tachiyomi.domain.manga.model.SortedScanlator
 class SetSortedScanlators(
     private val handler: DatabaseHandler
 ) {
+
     suspend fun await(mangaId: Long, sortedScanlators: Set<SortedScanlator>) {
         handler.await(inTransaction = true) {
             val currentlySortedScanlators = handler.awaitList {

@@ -285,7 +285,7 @@ class MangaScreen(
                 onResetToDefault = screenModel::resetToDefaultSettings,
                 scanlatorFilterActive = successState.scanlatorFilterActive,
                 onScanlatorFilterClicked = { showScanlatorsDialog = true },
-                sortScanlatorFilterActive = false,
+                sortScanlatorFilterActive = successState.scanlatorDeduplicationActive,
                 onSortScanlatorClicked = { showScanlatorsSortDialog = true},
             )
             MangaScreenModel.Dialog.TrackSheet -> {
@@ -367,7 +367,9 @@ class MangaScreen(
                 onDismissRequest = {showScanlatorsSortDialog = false},
                 sortedScanlators = successState.sortedScanlators,
                 scanlators = successState.availableScanlators,
-                onPositiveClick = {a -> Log.i("", successState.availableScanlators.toString())}
+                dedupeEnabled = successState.scanlatorDeduplicationActive,
+                onPositiveClick = screenModel::setSortedScanlators,
+                onEnabledToggled = screenModel::setDeduplicateScanlators,
             )
         }
     }

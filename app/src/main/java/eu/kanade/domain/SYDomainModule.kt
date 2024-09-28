@@ -7,6 +7,7 @@ import eu.kanade.domain.manga.interactor.GetPagePreviews
 import eu.kanade.domain.manga.interactor.GetSortTag
 import eu.kanade.domain.manga.interactor.GetSortedScanlators
 import eu.kanade.domain.manga.interactor.ReorderSortTag
+import eu.kanade.domain.manga.interactor.SetSortedScanlators
 import eu.kanade.domain.source.interactor.CreateSourceCategory
 import eu.kanade.domain.source.interactor.DeleteSourceCategory
 import eu.kanade.domain.source.interactor.GetExhSavedSearch
@@ -157,5 +158,6 @@ class SYDomainModule : InjektModule {
         addFactory { GetCustomMangaInfo(get()) }
         addFactory { SetCustomMangaInfo(get()) }
         addFactory { GetSortedScanlators(get()) }
+        addFactory { SetSortedScanlators(get()) }
     }
 }
